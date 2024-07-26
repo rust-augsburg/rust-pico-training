@@ -1,8 +1,8 @@
 # Introduction
 
-presentation: <https://rust-augsburg.github.io/2024-05-16-meetup-presentation-rust-pico/>
+presentation: <https://rust-augsburg.github.io/rust-pico-training/>
 
-repo of the presentation: <https://github.com/rust-augsburg/2024-05-16-meetup-presentation-rust-pico>
+repo: <https://github.com/rust-augsburg/rust-pico-training>
 
 ## Tiago Manczak <https://github.com/tiagomanczak>
 

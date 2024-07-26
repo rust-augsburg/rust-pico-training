@@ -1,4 +1,4 @@
-# Beschreibung des Hardware Aufbaus
+# Breadboard Wiring Test Hardware
 
 ## Stückliste
 

@@ -1,6 +1,6 @@
 # Why Pico
 
-<https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html#raspberry-pi-pico-w-and-pico-wh>
+<https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html#the-family>
 
 ### Decision for Pico Family
 
