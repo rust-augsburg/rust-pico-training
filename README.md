@@ -1,6 +1,6 @@
-# 2024-05-16-meetup-presentation-rust-pico
+# Embedded Rust on Raspberry Pico Familiy
 
-To view the presentation: <https://rust-augsburg.github.io/2024-05-16-meetup-presentation-rust-pico/>
+To view the presentation: <https://rust-augsburg.github.io/rust-pico-training/>
 
 This presentation was created with [mdBook](https://rust-lang.github.io/mdBook/). To install just execute  `cargo install mdbook`.
 
