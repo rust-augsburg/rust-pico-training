@@ -6,7 +6,7 @@ Two Raspberry Pi Picos are used. PicoA operates as a debug probe, while PicoB se
 
 Download the firmware **`debugprobe_on_pico.uf2`** from:
 https://github.com/raspberrypi/debugprobe/releases
-ATTENTION: **debugprobe_on_pico.uf2** is needed !! 
+ATTENTION: **debugprobe_on_pico.uf2** is needed !!
 
 (Alternatively build the debugprobe from source code as described in [Getting started with Pico](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) Build and flash picoprobe)
 
@@ -40,14 +40,8 @@ One advantage of using a Pico as a debug probe is that no separate power supply 
 |   Pin | Description |   Pin | Description |
 |    39 | VSYS        |    39 | VSYS        |
 
-Of course It's also possible to provide the power the PicoB via USB. 
+Of course It's also possible to provide the power the PicoB via USB.
 
 ## Testing Picoprobe
 
-Test the connection to the probe
-
-```sh
-openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg
-```
-
-Now test with flashing a simple application.
+Test with flashing a simple application.
