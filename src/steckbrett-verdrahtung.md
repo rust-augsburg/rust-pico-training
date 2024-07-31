@@ -68,9 +68,9 @@ Die Pins auf dem Debug Probe sind von links aufsteigend nummeriert (USB Stecker 
 
 | Quelle | Ziel        |
 |-------:|-------------|
-|      1 | DebucPico 4 |
-|      2 | DebucPico 3 |
-|      3 | DebucPico 5 |
+|      1 | DebugPico 4 |
+|      2 | DebugPico 3 |
+|      3 | DebugPico 5 |
 
 # Bild Steckbrettaufbau
 
