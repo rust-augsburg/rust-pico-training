@@ -1,7 +1,7 @@
 [book]
 title = "Getting Started with Embedded Rust on Pico"
 #authors = ["Tiago Manczak", "Michael Schury"]
-multilingual = false
+#multilingual = false
 src = "src"
 language = "en"
 
