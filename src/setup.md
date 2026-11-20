@@ -146,35 +146,12 @@ If `code` is not on `PATH`, install **rust-analyzer** and **Debugger for
 probe-rs** from VS Code's Extensions view. CodeLLDB and the Microsoft C/C++
 extension are not required for the `probe-rs` workflow.
 
-## 5. Select the correct Embassy project
+## 5. Create a Blinky project
 
-A typical Pico W Embassy project uses these crates:
-
-- `embassy-rp`, `embassy-executor`, and `embassy-time`;
-- `cyw43` and `cyw43-pio` for the W board's radio and on-board LED;
-- `defmt`, `defmt-rtt`, and `panic-probe` for logs and panic reports.
-
-Use compatible versions from one template or example; do not copy individual
-dependency versions between unrelated examples. The important board settings
-are:
-
-```toml
-# Pico W / RP2040
-embassy-rp = { version = "...", features = ["rp2040", "time-driver", "critical-section-impl"] }
-```
-
-```toml
-# Pico 2 W / RP2350A
-embassy-rp = { version = "...", features = ["rp235xa", "time-driver", "critical-section-impl"] }
-```
-
-Use the board/target pairing from the table at the top of this page. Good
-upstream starting points are Embassy's
-[RP2040 examples](https://github.com/embassy-rs/embassy/tree/main/examples/rp/src/bin)
-and
-[RP235x examples](https://github.com/embassy-rs/embassy/tree/main/examples/rp235x/src/bin).
-For the first test, choose `wifi_blinky.rs` for Pico W or `blinky_wifi.rs` for
-Pico 2 W.
+```sh
+cargo install cargo-generate
+cargo generate gh:koehlma/rust-embedded-template --name blinky
+``
 
 ### CYW43 firmware
 

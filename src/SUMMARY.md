@@ -18,7 +18,6 @@
   - [Embedded Project Structure](./rust-embedded-project.md)
 # Workshop
 - [Setup Development Environment](./setup.md)
-- [Exercise Blinky](./blinky.md)
 - [Embassy](./embassy-basics.md)
 
 <!--
