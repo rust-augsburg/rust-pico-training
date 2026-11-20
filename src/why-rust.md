@@ -16,3 +16,8 @@
 - **Platform-independent development**
 - **Cross-compilation**
 
+## Rust is easy !
+
+[Andreas Klostermayer Rust at 15%: Production-Ready Without the Pain](https://www.youtube.com/watch?v=tKClgIWTn18)
+
+

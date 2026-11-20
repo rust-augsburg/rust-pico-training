@@ -1,21 +1,19 @@
 # Set up the development environment
 
 This guide prepares Linux, macOS, or Windows 11 for Embedded Rust development
-with either of these wireless boards:
+with Embassy on either wireless Pico generation:
 
-| Board | Microcontroller | Rust target | HAL |
+| Board | Microcontroller | Rust target | `embassy-rp` feature |
 |---|---|---|---|
-| Raspberry Pi Pico W / Pico WH | RP2040 (Cortex-M0+) | `thumbv6m-none-eabi` | `rp2040-hal` |
-| Raspberry Pi Pico 2 W / Pico 2 WH | RP2350 (Cortex-M33) | `thumbv8m.main-none-eabihf` | `rp235x-hal` |
+| Raspberry Pi Pico W / Pico WH | RP2040 (Cortex-M0+) | `thumbv6m-none-eabi` | `rp2040` |
+| Raspberry Pi Pico 2 W / Pico 2 W with headers | RP2350A (Cortex-M33) | `thumbv8m.main-none-eabihf` | `rp235xa` |
 
-The host setup is the same for both boards. The project configuration, linker
-memory map, HAL, and `probe-rs` chip selection must match the board. The `W`
-models also drive their on-board LED through the CYW43 wireless chip, so an
-example written for a non-wireless Pico's GPIO LED may compile but will not
-blink the on-board LED.
+We first flash through USB in BOOTSEL mode. This requires only the target board
+and a USB cable. Afterwards, we configure an SWD debug probe for automatic
+flashing, `defmt`/RTT logs, panic reports, breakpoints, and single-stepping.
 
-This course uses an SWD debug probe and `probe-rs`. USB/UF2 flashing is
-described as an alternative at the end of this page.
+The W boards drive their on-board LED through the CYW43 wireless chip. Use a
+wireless-board example; a normal Pico GPIO blinky will not operate that LED.
 
 ## 1. Install host prerequisites
 
@@ -29,8 +27,7 @@ sudo apt install -y \
   build-essential cmake curl git libssl-dev libudev-dev pkg-config
 ```
 
-Linux also needs udev rules so that `probe-rs` can access a USB debug probe
-without `sudo`:
+The udev rules required for an SWD probe can be installed now:
 
 ```sh
 curl --proto '=https' --tlsv1.2 -o /tmp/69-probe-rs.rules \
@@ -40,21 +37,20 @@ sudo udevadm control --reload
 sudo udevadm trigger
 ```
 
-Unplug and reconnect the debug probe. If access is still denied, follow the
-current [probe-rs Linux setup instructions](https://probe.rs/docs/getting-started/probe-setup/#linux-udev-rules).
+Unplug and reconnect the probe after installing the rules. See the current
+[probe-rs Linux instructions](https://probe.rs/docs/getting-started/probe-setup/#linux-udev-rules)
+if access is still denied.
 
 ### macOS
 
-Install Apple's command-line developer tools (Git and a native compiler are
-included):
+Install Apple's command-line developer tools:
 
 ```sh
 xcode-select --install
 ```
 
-Complete the installer dialog before continuing. A CMSIS-DAP probe, including
-a Pico running Debug Probe firmware, needs no additional macOS driver.
-Homebrew is optional and is not required by this guide.
+Complete the installer dialog before continuing. CMSIS-DAP probes need no
+additional macOS driver.
 
 ### Windows 11
 
@@ -62,14 +58,14 @@ Homebrew is optional and is not required by this guide.
 2. Download and run [`rustup-init.exe`](https://rustup.rs/). When prompted,
    allow Rust to install the Visual Studio C++ Build Tools, or install the
    **Desktop development with C++** workload yourself.
-3. Use a normal 64-bit PowerShell terminal for the remaining Windows commands.
-   Native Windows is recommended for USB debugging; WSL requires USB forwarding
-   and separate Linux udev configuration.
+3. Use a normal 64-bit PowerShell terminal for the remaining commands. Native
+   Windows is recommended; WSL requires USB forwarding and separate Linux udev
+   configuration.
 
-A Pico used as a CMSIS-DAP debug probe normally needs no extra Windows driver.
-Do not replace its driver with Zadig/WinUSB unless `probe-rs` reports a driver
-problem and the [probe-rs probe setup page](https://probe.rs/docs/getting-started/probe-setup/)
-requires it for that particular probe.
+A Pico or official Raspberry Pi Debug Probe using CMSIS-DAP normally needs no
+extra Windows driver. Do not replace its driver with Zadig/WinUSB unless
+`probe-rs` reports a driver problem and its documentation requires that change
+for the particular probe.
 
 ## 2. Install Rust
 
@@ -79,14 +75,11 @@ On Linux and macOS, run:
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Choose the standard installation. Restart the terminal afterwards (or load the
-environment as instructed by the installer).
+Choose the standard installation and restart the terminal afterwards. On
+Windows, close and reopen PowerShell after running `rustup-init.exe` so that
+`%USERPROFILE%\.cargo\bin` is on `PATH`.
 
-On Windows 11, Rust was installed by `rustup-init.exe` in the preceding
-section. Close and reopen PowerShell so that `%USERPROFILE%\.cargo\bin` is on
-`PATH`.
-
-Update stable Rust and install the targets for **both** Pico generations:
+Install stable Rust and both Pico compilation targets:
 
 ```sh
 rustup update stable
@@ -103,11 +96,27 @@ cargo --version
 rustup target list --installed
 ```
 
-The final command must list both targets shown above.
+Embassy is a collection of Rust crates declared in a project's `Cargo.toml`.
+There is no global Embassy program to install. Current Embassy projects use
+stable Rust; this setup does not require nightly Rust or the `rust-src`
+component.
 
-## 3. Install the Embedded Rust tools
+## 3. Install picotool and the Embedded Rust tools
 
-These commands are identical in a Unix shell and PowerShell:
+`picotool` supports RP2040 and RP2350 ELF and UF2 files. Download the current
+pre-built package for Windows, macOS, or Linux from the official
+[`pico-sdk-tools` releases](https://github.com/raspberrypi/pico-sdk-tools/releases),
+extract it, and add the directory containing the `picotool` executable to
+`PATH`. Alternatively, follow the
+[`picotool` build instructions](https://github.com/raspberrypi/picotool#building--installing).
+
+Verify it in a new terminal:
+
+```sh
+picotool version
+```
+
+Install the remaining tools in a Unix shell or PowerShell:
 
 ```sh
 cargo install --locked probe-rs-tools
@@ -115,20 +124,14 @@ cargo install --locked flip-link
 cargo install --locked cargo-generate
 ```
 
-`probe-rs-tools` installs the `probe-rs`, `cargo-embed`, and `cargo-flash`
-commands. The old command `cargo install probe-rs --features cli` is obsolete.
-
-Check that the tools can be found:
+`probe-rs-tools` installs `probe-rs`, `cargo-embed`, and `cargo-flash`. Check
+the commands:
 
 ```sh
 probe-rs --version
-probe-rs list
 cargo generate --version
 flip-link --version
 ```
-
-`probe-rs list` may report no probes until one is connected, but it should not
-report that the command is missing.
 
 ## 4. Install Visual Studio Code
 
@@ -139,108 +142,237 @@ code --install-extension rust-lang.rust-analyzer
 code --install-extension probe-rs.probe-rs-debugger
 ```
 
-If `code` is not on `PATH`, install the extensions from VS Code's Extensions
-view instead. The CodeLLDB or Microsoft C/C++ extension is not required for
-debugging through `probe-rs`.
+If `code` is not on `PATH`, install **rust-analyzer** and **Debugger for
+probe-rs** from VS Code's Extensions view. CodeLLDB and the Microsoft C/C++
+extension are not required for the `probe-rs` workflow.
 
-## 5. Prepare and connect a debug probe
+## 5. Select the correct Embassy project
 
-The target Pico W/Pico 2 W cannot debug itself. Use a Raspberry Pi Debug Probe,
-or flash a second Pico-series board with the current
-[Raspberry Pi Debug Probe firmware](https://github.com/raspberrypi/debugprobe/releases):
+A typical Pico W Embassy project uses these crates:
 
-- `debugprobe_on_pico.uf2` for a first-generation Pico used as the probe;
-- `debugprobe_on_pico2.uf2` for a Pico 2 used as the probe.
+- `embassy-rp`, `embassy-executor`, and `embassy-time`;
+- `cyw43` and `cyw43-pio` for the W board's radio and on-board LED;
+- `defmt`, `defmt-rtt`, and `panic-probe` for logs and panic reports.
 
-Connect the probe's SWDIO, SWCLK, and GND to the target board. The target also
-needs power. Then verify the host connection:
+Use compatible versions from one template or example; do not copy individual
+dependency versions between unrelated examples. The important board settings
+are:
+
+```toml
+# Pico W / RP2040
+embassy-rp = { version = "...", features = ["rp2040", "time-driver", "critical-section-impl"] }
+```
+
+```toml
+# Pico 2 W / RP2350A
+embassy-rp = { version = "...", features = ["rp235xa", "time-driver", "critical-section-impl"] }
+```
+
+Use the board/target pairing from the table at the top of this page. Good
+upstream starting points are Embassy's
+[RP2040 examples](https://github.com/embassy-rs/embassy/tree/main/examples/rp/src/bin)
+and
+[RP235x examples](https://github.com/embassy-rs/embassy/tree/main/examples/rp235x/src/bin).
+For the first test, choose `wifi_blinky.rs` for Pico W or `blinky_wifi.rs` for
+Pico 2 W.
+
+### CYW43 firmware
+
+The wireless examples embed binary firmware for the CYW43439. Obtain the files
+expected by the selected example from Embassy's official
+[`cyw43-firmware` directory](https://github.com/embassy-rs/embassy/tree/main/cyw43-firmware):
+
+- `43439A0.bin` — Wi-Fi firmware;
+- `43439A0_clm.bin` — regulatory/CLM data;
+- the NVRAM file referenced by the example, currently `nvram_rp2040.bin` for
+  the official Pico W-series examples.
+
+Keep these files together and use the exact paths expected by the example.
+Firmware, CLM, and NVRAM data form a matched set; do not substitute similarly
+named files from an unrelated project.
+
+Wi-Fi examples also need a network name and password. Keep credentials in a
+local, ignored configuration or environment variables as supported by the
+workshop project. Never commit real Wi-Fi credentials.
+
+## 6. First flash: drag and drop a UF2
+
+Build the selected wireless blinky using the target configured by the project:
+
+```sh
+cargo build --release
+```
+
+The ELF is located below the corresponding target directory, for example:
+
+```text
+target/thumbv6m-none-eabi/release/<binary-name>
+target/thumbv8m.main-none-eabihf/release/<binary-name>
+```
+
+Convert that ELF to UF2:
+
+```sh
+picotool uf2 convert -t elf \
+  target/<rust-target>/release/<binary-name> <binary-name>.uf2
+```
+
+Then flash it:
+
+1. Disconnect the target board from USB.
+2. Hold **BOOTSEL** while reconnecting USB.
+3. Release BOOTSEL when a removable drive appears:
+   - `RPI-RP2` for Pico W;
+   - `RP2350` for Pico 2 W.
+4. Copy `<binary-name>.uf2` to that drive using Finder, File Explorer, or your
+   desktop's file manager.
+
+The drive automatically ejects and the application starts. The on-board LED
+should blink through CYW43. This first flash does not require a debug probe.
+
+## 7. Automate USB flashing with picotool
+
+`picotool` can load the compiled ELF directly. Configure the project's
+`.cargo/config.toml` runner for its target:
+
+```toml
+[target.thumbv6m-none-eabi]
+runner = "picotool load --update --verify --execute -t elf"
+```
+
+or:
+
+```toml
+[target.thumbv8m.main-none-eabihf]
+runner = "picotool load --update --verify --execute -t elf"
+```
+
+Put the board into BOOTSEL mode and verify that it is visible:
+
+```sh
+picotool info
+cargo run --release
+```
+
+This remains a USB flashing workflow. For live logs and source-level
+debugging, continue with SWD.
+
+## 8. Debug connector (SWD)
+
+Both probe options below provide a CMSIS-DAP-compatible USB-to-SWD connection.
+They allow automatic ELF flashing without BOOTSEL, `defmt`/RTT output, panic
+reports, breakpoints, and single-stepping.
+
+The target's three-pin debug connector carries only **SWDIO**, **GND**, and
+**SWCLK**. It has no power pin: power the target separately through USB or
+`VSYS`. The connector's position differs between W and non-W boards; see the
+official [Pico-series SWD documentation](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html#debug-connector-swd).
+
+### Option A: official Raspberry Pi Debug Probe (recommended)
+
+The official probe is the plug-and-play option. It includes a USB cable and
+JST-SH-to-JST-SH, JST-SH-to-female-header, and JST-SH-to-male-header cables.
+Use its **D** port for SWD:
+
+| Debug Probe | Target Pico |
+|---|---|
+| `SC` (orange) | `SWCLK` |
+| `GND` (black) | `GND` |
+| `SD` (yellow) | `SWDIO` |
+
+Pico WH and Pico 2 W with headers have a keyed three-pin connector that accepts
+the JST-SH cable. Pico W and Pico 2 W without headers require soldered pins or
+a suitable adapter and the female-header cable.
+
+Follow the official [Raspberry Pi Debug Probe guide and labelled wiring
+images](https://www.raspberrypi.com/documentation/microcontrollers/debug-probe.html#getting-started).
+If probe and target have separate power sources, connect their grounds before
+connecting the signal wires; a voltage difference can damage the hardware.
+
+The probe's **U** port is an optional UART bridge. UART is not needed for SWD
+flashing or `defmt` over RTT.
+
+### Option B: use a second Pico-series board as the probe
+
+A first-generation Pico or a Pico 2 can run Raspberry Pi's official
+`debugprobe` firmware and provide the same CMSIS-DAP SWD interface. Firmware
+selection depends on the **probe board**, not the target:
+
+- first-generation Pico as probe: `debugprobe_on_pico.uf2`;
+- Pico 2 as probe: `debugprobe_on_pico2.uf2`.
+
+See [Use a Pico as a debug probe](./debugprobe.md) for firmware installation,
+the complete SWD/UART pin table, power options, and the workshop wiring images.
+The [breadboard wiring page](./steckbrett-verdrahtung.md) contains the detailed
+workshop circuit.
+
+## 9. Configure probe-rs
+
+Connect either probe and check that the host detects it:
 
 ```sh
 probe-rs list
 ```
 
-The debug-probe firmware depends on the **probe board**, not on whether the
-target is a Pico W or Pico 2 W.
+Replace the `picotool` runner with the correct SWD runner.
 
-## 6. Use the correct project configuration
-
-Start from the template for the target board's microcontroller:
-
-```sh
-# Raspberry Pi Pico W (RP2040)
-cargo generate --git https://github.com/rp-rs/rp2040-project-template
-
-# Raspberry Pi Pico 2 W (RP2350)
-cargo generate --git https://github.com/rp-rs/rp235x-project-template
-```
-
-Do not switch an existing project merely by changing the Rust target. Its HAL
-dependencies, `memory.x`, linker flags, and runner must also match the chip.
-The generated `.cargo/config.toml` should use this pairing for Pico W:
+For Pico W:
 
 ```toml
-[build]
-target = "thumbv6m-none-eabi"
-
 [target.thumbv6m-none-eabi]
 runner = "probe-rs run --chip RP2040"
 ```
 
-For Pico 2 W, the corresponding configuration is:
+For Pico 2 W:
 
 ```toml
-[build]
-target = "thumbv8m.main-none-eabihf"
-
 [target.thumbv8m.main-none-eabihf]
 runner = "probe-rs run --chip RP235x --protocol swd"
 ```
 
-The current RP235x template includes both `probe-rs` and `picotool` runner
-examples; uncomment the `probe-rs` line and comment out the `picotool` line for
-the SWD workflow used in this course.
-
-Build and flash from the generated project directory:
+Build, flash, and stream `defmt` output:
 
 ```sh
-cargo build
+cargo run
+```
+
+Use an optimized build when desired:
+
+```sh
 cargo run --release
 ```
 
-## Optional: flash through USB instead of SWD
+Keep debug information enabled in the project's release profile if you want
+useful backtraces and source-level debugging in release builds:
 
-Both generations support BOOTSEL mode. Hold **BOOTSEL** while connecting USB;
-the board appears as `RPI-RP2` (Pico W) or `RP2350` (Pico 2 W). You can then
-copy a suitable UF2 file to that drive.
-
-For command-line USB flashing and UF2 conversion, use a current
-[`picotool`](https://github.com/raspberrypi/picotool) release. It supports both
-RP2040 and RP2350 ELF files. Follow its platform-specific installation guide,
-then configure it as the Cargo runner as documented by
-[`rp-hal`](https://github.com/rp-rs/rp-hal#loading-over-usb-with-picotool).
-
-`elf2uf2-rs` is an RP2040-era tool and is therefore not installed as a common
-dependency here. Prefer `picotool` when the same workflow must support both
-Pico W and Pico 2 W.
+```toml
+[profile.release]
+debug = 2
+```
 
 ## Troubleshooting
 
-- **`cargo` or `rustc` is not found:** restart the terminal. On Windows, check
-  that `%USERPROFILE%\.cargo\bin` is on `PATH`; on Linux/macOS, check
-  `$HOME/.cargo/bin`.
-- **The build uses the wrong instruction set:** check the `[build] target` in
-  `.cargo/config.toml` against the table at the top of this page.
-- **`probe-rs` cannot open the probe on Linux:** reconnect it after installing
-  the udev rules and check `probe-rs list` again.
-- **`probe-rs` cannot identify the target:** check the SWD wiring and confirm
-  that the runner/chip name belongs to RP2040 or RP2350 as appropriate.
-- **The on-board LED does not blink:** use a Pico **W**/**2 W** example that
-  initializes CYW43; the wireless boards do not connect that LED directly to a
-  normal RP GPIO pin.
+- **`cargo`, `rustc`, or `picotool` is not found:** restart the terminal and
+  check that its installation directory is on `PATH`.
+- **The build uses the wrong instruction set:** compare the Cargo build target
+  and `embassy-rp` feature with the table at the top of this page.
+- **The on-board LED does not blink:** use the W-board example, confirm all
+  CYW43 firmware files and paths, and check that CYW43 initialization succeeds.
+- **`picotool info` finds no board:** reconnect it while holding BOOTSEL and
+  check for the `RPI-RP2` or `RP2350` drive.
+- **`probe-rs list` finds no probe:** reconnect it and, on Linux, recheck the
+  udev rules.
+- **The probe is found but cannot connect:** verify target power and common
+  ground, then check that SWDIO and SWCLK are not reversed.
+- **A Pico used as probe does not appear:** confirm that the UF2 matches the
+  probe generation (`debugprobe_on_pico.uf2` or `debugprobe_on_pico2.uf2`).
+- **Flashing reports the wrong chip:** use `RP2040` for Pico W and `RP235x` for
+  Pico 2 W.
 
-Current upstream references:
+## Upstream references
 
-- [`rp-hal` programming and target guidance](https://github.com/rp-rs/rp-hal#programming)
+- [Embassy repository and examples](https://github.com/embassy-rs/embassy)
+- [picotool](https://github.com/raspberrypi/picotool)
 - [probe-rs installation](https://probe.rs/docs/getting-started/installation/)
 - [Rust installation](https://www.rust-lang.org/tools/install)
 - [Raspberry Pi Pico-series documentation](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html)
