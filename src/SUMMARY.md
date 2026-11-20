@@ -1,20 +1,25 @@
 # Invisible
 
-# Getting Started
-- [Introduction](./introduction.md)
-  - [Why Rust](./why-rust.md)
-  - [Why Pico](./why-pico.md)
-- [Setup Development Environment](./setup.md)
-- [Exercise Blinky](./blinky.md)
+# [Introduction](./introduction.md)
+
+- [Agenda](./agenda.md)
+
+# Presentation
+
+- [Why Rust](./why-rust.md)
+- [Why Pico](./why-pico.md)
+- [Rust Basics](./rust-grundlagen.md)
 - [Embedded Basics](./embedded-basics.md)
    - [Pico Boards](./pico.md)
    - [Breadboard Wiring Test Hardware](./steckbrett-verdrahtung.md)
    - [Debug Probe](./debugprobe.md)
-- [Rust Basics](./rust-grundlagen.md)
 - [Rust Embedded](./rust-embedded.md)
   - [Rust Embedded Architecture (rp-pico)](./rust-embedded-architecture-pico.md)
   - [Embedded Project Structure](./rust-embedded-project.md)
-
+# Workshop
+- [Setup Development Environment](./setup.md)
+- [Exercise Blinky](./blinky.md)
+- [Embassy](./embassy-basics.md)
 
 <!--
 # Pico Embedded Examples
@@ -29,3 +34,6 @@
 
 # Next Event
 - [Augsburg Rust Meetup #22](./next-meetup.md)
+
+# Additional Material
+- [ESP32 Setup](./esp32-setup.md)

@@ -5,6 +5,9 @@ title = "Getting Started with Embedded Rust on Pico"
 src = "src"
 language = "en"
 
+[output.html]
+sidebar-header-nav = false
+
 [output.html.playground]
 editable = true
 

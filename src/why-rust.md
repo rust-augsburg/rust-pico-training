@@ -1,5 +1,7 @@
 # Why Rust and Embedded Rust in particular?
 
+## Community !
+
 ## Security, Memory Safety
 - **Ownership, Borrowing, Lifetimes**
 
@@ -18,6 +20,6 @@
 
 ## Rust is easy !
 
-[Andreas Klostermayer Rust at 15%: Production-Ready Without the Pain](https://www.youtube.com/watch?v=tKClgIWTn18)
+[Andreas Klostermayer: Rust at 15%: Production-Ready Without the Pain](https://www.youtube.com/watch?v=tKClgIWTn18)
 
-
+[Florian Gilcher: 15% of Rust](./20261119_201240.jpg)

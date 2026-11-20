@@ -4,6 +4,8 @@ presentation: <https://rust-augsburg.github.io/rust-pico-training/>
 
 repo: <https://github.com/rust-augsburg/rust-pico-training>
 
+## Aaron Erhardt <https://github.com/AaronErhardt>
+
 ## Tiago Manczak <https://github.com/tiagomanczak>
 
 ## Michael Schury <https://github.com/datenzauberer>
