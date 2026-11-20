@@ -26,3 +26,6 @@
 # Summary
   - [Feedback and Outlook](./feedback-outlook.md)
 -->  
+
+# Next Event
+- [Augsburg Rust Meetup #22](./next-meetup.md)
